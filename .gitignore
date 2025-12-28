@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+.venv/
+env/
+venv/
+pip-log.txt
+*.egg-info/
+
+# VSCode
+.vscode/
+
+# Node / TurboRepo
+node_modules/
+.turbo/
+dist/
+build/
+out/
+npm-debug.log
+yarn-error.log
+pnpm-lock.yaml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

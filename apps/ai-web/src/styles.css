@@ -1,12 +1,163 @@
 @import "tailwindcss";
 
-body {
-  @apply m-0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  :root {
+    /* Custom Color Palette */
+    --intense-cherry-50: #faebed;
+    --intense-cherry-100: #f5d6db;
+    --intense-cherry-200: #ebadb8;
+    --intense-cherry-300: #e08594;
+    --intense-cherry-400: #d65c70;
+    --intense-cherry-500: #cc334d;
+    --intense-cherry-600: #a3293d;
+    --intense-cherry-700: #7a1f2e;
+    --intense-cherry-800: #52141f;
+    --intense-cherry-900: #290a0f;
+
+    --yellow-green-50: #f5f8ec;
+    --yellow-green-100: #ecf1da;
+    --yellow-green-200: #d9e4b4;
+    --yellow-green-300: #c6d68f;
+    --yellow-green-400: #b3c969;
+    --yellow-green-500: #9fbb44;
+    --yellow-green-600: #809636;
+    --yellow-green-700: #607029;
+    --yellow-green-800: #404b1b;
+    --yellow-green-900: #20250e;
+
+    --wheat-50: #fcf4e9;
+    --wheat-100: #f8e9d3;
+    --wheat-200: #f1d3a7;
+    --wheat-300: #eabe7b;
+    --wheat-400: #e3a84f;
+    --wheat-500: #dd9222;
+    --wheat-600: #b0751c;
+    --wheat-700: #845815;
+    --wheat-800: #583a0e;
+    --wheat-900: #2c1d07;
+
+    --camel-50: #f7f2ee;
+    --camel-100: #efe4dc;
+    --camel-200: #dfc9b9;
+    --camel-300: #cfaf96;
+    --camel-400: #bf9473;
+    --camel-500: #af7950;
+    --camel-600: #8c6140;
+    --camel-700: #694930;
+    --camel-800: #463020;
+    --camel-900: #231810;
+
+    --brown-red-50: #fbeaea;
+    --brown-red-100: #f6d5d5;
+    --brown-red-200: #edacab;
+    --brown-red-300: #e48281;
+    --brown-red-400: #db5957;
+    --brown-red-500: #d22f2d;
+    --brown-red-600: #a82624;
+    --brown-red-700: #7e1c1b;
+    --brown-red-800: #541312;
+    --brown-red-900: #2a0909;
+
+    /* shadcn/ui Theme Variables */
+    --background: 0 0% 100%;
+    --foreground: 35 50% 12%;
+    /* camel-900 */
+
+    --card: 0 0% 100%;
+    --card-foreground: 35 50% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 35 50% 12%;
+
+    /* Primary: Yellow-Green (Brand Color) */
+    --primary: 72 46% 50%;
+    /* yellow-green-500 */
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: Camel */
+    --secondary: 30 25% 93%;
+    /* camel-50 */
+    --secondary-foreground: 30 33% 22%;
+    /* camel-800 */
+
+    /* Muted: Camel Light */
+    --muted: 30 25% 93%;
+    --muted-foreground: 30 29% 39%;
+    /* camel-600 */
+
+    /* Accent: Wheat */
+    --accent: 36 78% 92%;
+    /* wheat-50 */
+    --accent-foreground: 36 74% 29%;
+    /* wheat-700 */
+
+    /* Destructive: Intense Cherry */
+    --destructive: 350 60% 50%;
+    /* intense-cherry-500 */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 30 20% 85%;
+    /* camel-200 */
+    --input: 30 20% 85%;
+    --ring: 72 46% 50%;
+    /* yellow-green-500 */
+
+    --radius: 0.5rem;
+
+    --chart-1: 72 46% 50%;
+    --chart-2: 36 74% 50%;
+    --chart-3: 30 29% 50%;
+    --chart-4: 350 60% 50%;
+    --chart-5: 30 33% 30%;
+  }
+
+  .dark {
+    --background: 35 50% 8%;
+    /* camel-900 */
+    --foreground: 30 25% 93%;
+
+    --card: 35 50% 8%;
+    --card-foreground: 30 25% 93%;
+
+    --popover: 35 50% 8%;
+    --popover-foreground: 30 25% 93%;
+
+    --primary: 72 46% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 30 33% 22%;
+    --secondary-foreground: 30 25% 93%;
+
+    --muted: 30 33% 22%;
+    --muted-foreground: 30 29% 60%;
+
+    --accent: 36 74% 29%;
+    --accent-foreground: 36 78% 92%;
+
+    --destructive: 350 60% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 30 33% 22%;
+    --input: 30 33% 22%;
+    --ring: 72 46% 50%;
+
+    --chart-1: 72 50% 60%;
+    --chart-2: 36 78% 60%;
+    --chart-3: 30 40% 60%;
+    --chart-4: 350 65% 60%;
+    --chart-5: 30 40% 40%;
+  }
+}
+
+@layer base {
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+      "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
 code {

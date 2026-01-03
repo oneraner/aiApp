@@ -63,3 +63,32 @@ class GeminiProvider(BaseLLMProvider):
                 yield text
 
         return _async_stream()
+    
+    def list_models(self):
+        """
+        從 Google API 動態取得可用的 Gemini 模型列表
+        """
+        try:
+            # 使用 Gemini client 列出所有可用模型
+            models_response = self.client.models.list()
+            
+            # 過濾出 gemini 模型並提取名稱
+            gemini_models = []
+            for model in models_response:
+                model_name = model.name
+                # 只保留 gemini 開頭的模型，並去掉 "models/" 前綴
+                if "gemini" in model_name.lower():
+                    # 格式化模型名稱（去掉 "models/" 前綴）
+                    clean_name = model_name.replace("models/", "")
+                    gemini_models.append(clean_name)
+            
+            return sorted(gemini_models) if gemini_models else []
+        except Exception as e:
+            # 如果 API 調用失敗，返回預設的模型列表
+            print(f"Warning: Failed to fetch models from Gemini API: {e}")
+            return [
+                "gemini-2.0-flash-exp",
+                "gemini-1.5-pro",
+                "gemini-1.5-flash",
+                "gemini-1.5-flash-8b",
+            ]

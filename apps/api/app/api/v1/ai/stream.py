@@ -7,7 +7,7 @@ import asyncio
 router = APIRouter()
 r = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
 
-@router.get("/stream/{job_id}")
+@router.get("/{job_id}")  # Changed from "/stream/{job_id}" to "/{job_id}"
 async def stream_job(job_id: str):
     async def event_generator():
         last_id = "$"  # 從最新的訊息開始

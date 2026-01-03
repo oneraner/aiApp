@@ -4,6 +4,9 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "dev:services": "docker-compose up -d",
+    "dev:all": "pnpm dev:services && pnpm dev",
+    "stop:services": "docker-compose down",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",

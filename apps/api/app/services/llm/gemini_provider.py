@@ -40,29 +40,32 @@ class GeminiProvider(BaseLLMProvider):
         prompt: str,
     ) -> AsyncIterator[str]:
         """
-        注意：
-        - 這裡不是 async def
-        - 回傳 AsyncIterator[str]
+        Generate streaming response from Gemini API.
+        Limited to 500 output tokens to prevent quota abuse.
         """
-
-        async def _async_stream() -> AsyncIterator[str]:
-            loop = asyncio.get_running_loop()
-
-            def sync_chunks():
-                for chunk in self.client.models.generate_content_stream(
-                    model=model,
-                    contents=prompt,
-                ):
-                    if chunk.text:
-                        yield chunk.text
-
-            # 將 sync iterator 包成 async
-            for text in await loop.run_in_executor(
-                None, lambda: list(sync_chunks())
-            ):
-                yield text
-
-        return _async_stream()
+        try:
+            # Configure generation with token limit
+            generation_config = {
+                "max_output_tokens": 500,  # Hard limit to prevent abuse
+                "temperature": 0.7,
+            }
+            
+            response = await self.client.models.generate_content(
+                model=model, # The model name from list_models already includes "gemini-", so no need for "models/" prefix here.
+                contents=prompt,
+                generation_config=generation_config,
+                stream=True
+            )
+            
+            async for chunk in response:
+                if chunk.text:
+                    yield chunk.text
+        except Exception as e:
+            error_msg = str(e)
+            print(f"[Gemini Error] {error_msg}")
+            # Depending on the desired behavior, you might want to re-raise,
+            # yield an error message, or just let the stream end.
+            # For now, we'll just print and let the stream end.
     
     def list_models(self):
         """

@@ -1,5 +1,5 @@
 # app/api/v1/ai_trigger.py
-from fastapi import APIRouter, BackgroundTasks, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from pydantic import BaseModel
 from uuid import uuid4
 import json
@@ -10,6 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.services.llm.gemini_provider import GeminiProvider
 from app.db.database import get_db
 from app.models.chat import Conversation, Message
+from app.utils.token_counter import validate_input_size, estimate_tokens
+from app.infra.middleware.rate_limit import RATE_LIMIT_CONFIG
 
 router = APIRouter()
 r = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
@@ -20,8 +22,39 @@ class AITriggerRequest(BaseModel):
     conversation_id: str | None = None  # Optional: existing conversation ID
 
 @router.post("")  # Changed from "/trigger" to "" because parent router has prefix="/trigger"
-async def trigger_ai(req: AITriggerRequest, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
+async def trigger_ai(
+    req: AITriggerRequest,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db)
+):
     job_id = str(uuid4())
+    
+    # Extract user message content
+    user_content = "\n".join([c.get("content", "") for c in req.contents])
+    
+    # 1. Validate input size (300 chars limit)
+    is_valid, error_msg = validate_input_size(user_content, RATE_LIMIT_CONFIG["max_input_chars"])
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=error_msg)
+    
+    # 2. Check and update token budget
+    client_ip = request.client.host if request.client else "unknown"
+    input_token_key = f"rate_limit:{client_ip}:input_tokens"
+    input_tokens_used = await r.get(input_token_key)
+    input_tokens_used = int(input_tokens_used) if input_tokens_used else 0
+    
+    estimated_tokens = estimate_tokens(user_content)
+    
+    if input_tokens_used + estimated_tokens > RATE_LIMIT_CONFIG["max_input_tokens_per_day"]:
+        raise HTTPException(
+            status_code=429,
+            detail=f"每日輸入用量已達上限（已用 {input_tokens_used}，本次需要 {estimated_tokens}）"
+        )
+    
+    # Increment token usage
+    await r.incrby(input_token_key, estimated_tokens)
+    await r.expire(input_token_key, 86400)  # 24 hours
     
     # Get or create conversation
     if req.conversation_id:
@@ -36,9 +69,6 @@ async def trigger_ai(req: AITriggerRequest, background_tasks: BackgroundTasks, d
         db.add(conversation)
     
     await db.flush()  # Get the conversation ID
-    
-    # Extract user message content
-    user_content = "\n".join([c.get("content", "") for c in req.contents])
     
     # Save user message to database
     user_message = Message(

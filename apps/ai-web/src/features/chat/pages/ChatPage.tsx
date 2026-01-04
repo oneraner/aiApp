@@ -58,7 +58,7 @@ export function ChatPage() {
       {/* Main Chat Area */}
       <main className="flex-1 flex flex-col h-screen">
         {/* Header with consistent height (h-16) to match sidebar */}
-        <header className="border-b h-16 px-4 flex items-center justify-between gap-4 flex-shrink-0">
+        <header className="border-b h-16 px-2 sm:px-4 flex items-center justify-between gap-2 sm:gap-4 flex-shrink-0">
           <div className="flex items-center gap-2">
             {/* Mobile Menu Toggle - Only visible on small screens */}
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -69,7 +69,7 @@ export function ChatPage() {
               </SheetTrigger>
             </Sheet>
 
-            <h1 className="font-semibold text-lg">AI Chat</h1>
+            <h1 className="font-semibold text-lg hidden sm:block">AI Chat</h1>
           </div>
 
           <div className="flex items-center gap-2">

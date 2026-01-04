@@ -19,8 +19,8 @@ export function ChatInput({
   const isOverLimit = charCount > MAX_CHARS
 
   return (
-    <div className="border-t p-4 bg-background" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
-      <div className="max-w-3xl mx-auto space-y-2">
+    <div className="border-t p-2 sm:p-4 bg-background w-full" style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}>
+      <div className="max-w-3xl mx-auto space-y-2 w-full px-2 sm:px-0">
         <TextArea
           rows={2}
           value={value}

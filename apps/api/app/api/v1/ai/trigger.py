@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from uuid import uuid4
 import json
 import redis.asyncio as redis
+import asyncio  # For timeout functionality
 from typing import Any, Dict, cast
 from sqlalchemy.ext.asyncio import AsyncSession
 # LLM provider
@@ -117,14 +118,23 @@ async def process_job(job_id: str, model: str, contents: list, conversation_id: 
         # Collect full response for database
         full_response = ""
 
-        # 逐 chunk 生成
+        # 30秒超時保護
         chunk_count = 0
-        async for chunk in provider.stream(model=model, prompt=prompt):
-            await r.xadd(f"ai_results:{job_id}", fields={"chunk": chunk})
-            full_response += chunk
-            chunk_count += 1
-            if chunk_count % 10 == 0:
-                print(f"[Background Task] Received {chunk_count} chunks")
+        try:
+            async with asyncio.timeout(30):  # 30 second timeout
+                async for chunk in provider.stream(model=model, prompt=prompt):
+                    await r.xadd(f"ai_results:{job_id}", fields={"chunk": chunk})
+                    full_response += chunk
+                    chunk_count += 1
+                    if chunk_count % 10 == 0:
+                        print(f"[Background Task] Received {chunk_count} chunks")
+        except asyncio.TimeoutError:
+            print(f"[Background Task] Request timeout after 30 seconds")
+            error_msg = "請求超時（30秒），請重試或使用更短的提示"
+            await r.xadd(f"ai_results:{job_id}", fields={"error": error_msg})
+            # Still save what we got
+            if not full_response:
+                full_response = f"[Error] {error_msg}"
 
         print(f"[Background Task] Streaming complete. Total chunks: {chunk_count}")
 

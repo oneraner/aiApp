@@ -63,10 +63,10 @@ export function ConversationSidebar({
     }
 
     return (
-        <div className="flex flex-col h-full bg-muted/30">
-            {/* Header */}
-            <div className="p-4 border-b">
-                <h2 className="text-lg font-semibold text-foreground">Conversations</h2>
+        <div className="h-full flex flex-col">
+            {/* Header - Match main area header height (h-16) */}
+            <div className="h-16 px-4 border-b flex items-center flex-shrink-0">
+                <h2 className="font-semibold">Conversations</h2>
             </div>
 
             {/* Conversation List */}

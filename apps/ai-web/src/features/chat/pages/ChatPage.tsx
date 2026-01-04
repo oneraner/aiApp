@@ -56,10 +56,11 @@ export function ChatPage() {
       </Sheet>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
-        <header className="h-14 border-b flex items-center justify-between px-4 bg-background">
-          <div className="flex items-center gap-3">
-            {/* Mobile Menu Button */}
+      <main className="flex-1 flex flex-col h-screen">
+        {/* Header with consistent height (h-16) to match sidebar */}
+        <header className="border-b h-16 px-4 flex items-center justify-between gap-4 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            {/* Mobile Menu Toggle - Only visible on small screens */}
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="lg:hidden">
@@ -69,45 +70,46 @@ export function ChatPage() {
             </Sheet>
 
             <h1 className="font-semibold text-lg">AI Chat</h1>
-
-            {!modelsLoading && models.length > 0 && (
-              <div className="hidden sm:block">
-                <ModelSelector
-                  value={selectedModel}
-                  onChange={setSelectedModel}
-                  models={models}
-                  disabled={isStreaming}
-                />
-              </div>
-            )}
           </div>
 
-          {/* New Chat button - Always visible with solid styling */}
-          <Button
-            onClick={handleNewConversation}
-            className="bg-[#9fbb44] hover:bg-[#809636] text-white font-medium"
-            size="sm"
-          >
-            New Chat
-          </Button>
+          <div className="flex items-center gap-2">
+            {!modelsLoading && models.length > 0 && (
+              <ModelSelector
+                value={selectedModel}
+                onChange={setSelectedModel}
+                models={models}
+                disabled={isStreaming}
+              />
+            )}
+            <Button
+              onClick={handleNewConversation}
+              className="bg-[#9fbb44] hover:bg-[#809636] text-white font-medium"
+              size="sm"
+            >
+              New Chat
+            </Button>
+          </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto">
+        {/* Message Area */}
+        <div className="flex-1 overflow-y-auto">
           <ChatMessageList messages={messages} />
-        </main>
+        </div>
 
+        {/* Input Area with iOS safe area */}
         <ChatInput
           value={input}
           disabled={isStreaming}
           onChange={setInput}
           onSubmit={handleSubmit}
         />
+      </main>
 
-        <ErrorDialog
-          error={error}
-          onClose={clearError}
-        />
-      </div>
+      {/* Error Dialog */}
+      <ErrorDialog
+        error={error}
+        onClose={clearError}
+      />
     </div>
   )
 }

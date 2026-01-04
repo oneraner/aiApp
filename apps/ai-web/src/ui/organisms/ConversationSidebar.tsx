@@ -46,7 +46,9 @@ export function ConversationSidebar({
     }
 
     const formatDate = (dateString: string) => {
-        const date = new Date(dateString)
+        // Backend returns UTC time, append 'Z' if not present to ensure correct parsing
+        const isoString = dateString.endsWith('Z') ? dateString : dateString + 'Z'
+        const date = new Date(isoString)
         const now = new Date()
         const diffMs = now.getTime() - date.getTime()
         const diffMins = Math.floor(diffMs / 60000)

@@ -47,8 +47,11 @@ async def run_migrations():
         logger.info("🔄 Starting database migrations...")
         alembic_cfg = get_alembic_config()
         
-        # Run migrations to the latest version
-        command.upgrade(alembic_cfg, "head")
+        # Run migrations synchronously (Alembic is not async)
+        # We run it in the default event loop to avoid blocking
+        import asyncio
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, command.upgrade, alembic_cfg, "head")
         
         logger.info("✓ Database migrations completed successfully")
         return True
@@ -58,17 +61,3 @@ async def run_migrations():
         # The health check endpoint will catch database issues
         return False
 
-
-async def check_migration_status():
-    """
-    Check if there are any pending migrations
-    Returns True if database is up to date
-    """
-    try:
-        alembic_cfg = get_alembic_config()
-        # This would need more complex logic to actually check
-        # For now, we'll just return True
-        return True
-    except Exception as e:
-        logger.error(f"Failed to check migration status: {e}")
-        return False

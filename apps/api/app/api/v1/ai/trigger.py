@@ -82,18 +82,27 @@ async def trigger_ai(
     db.add(user_message)
     await db.commit()
     
-    # Add to Redis job queue
-    job_data: Dict[str, str] = {
-        "job_id": job_id,
-        "model": req.model,
-        "contents": json.dumps(req.contents),
-        "conversation_id": conversation.id,
-        "status": "pending"
-    }
-    await r.xadd("ai_jobs", fields=cast(Any, job_data))
+    # Add to Redis job queue and start background task
+    try:
+        job_data: Dict[str, str] = {
+            "job_id": job_id,
+            "model": req.model,
+            "contents": json.dumps(req.contents),
+            "conversation_id": conversation.id,
+            "status": "pending"
+        }
+        await r.xadd("ai_jobs", fields=cast(Any, job_data))
 
-    # 啟動背景 worker
-    background_tasks.add_task(process_job, job_id, req.model, req.contents, conversation.id, r)
+        # 啟動背景 worker
+        background_tasks.add_task(process_job, job_id, req.model, req.contents, conversation.id, r)
+    except Exception as redis_error:
+        # If Redis fails, log but don't fail the whole request
+        # The conversation is already saved to DB
+        print(f"[WARN] Redis connection failed: {redis_error}")
+        raise HTTPException(
+            status_code=503,
+            detail="AI 服務暫時無法使用，請稍後再試（Redis 連接失敗）"
+        )
 
     return {
         "job_id": job_id,

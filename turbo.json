@@ -12,7 +12,9 @@
       ],
       "outputs": [
         ".next/**",
-        "!.next/cache/**"
+        "!.next/cache/**",
+        "dist/**",
+        ".output/**"
       ],
       "env": [
         "GEMINI_API_KEY",

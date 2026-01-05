@@ -1,14 +1,14 @@
 # app/api/v1/ai_stream.py
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 import redis.asyncio as redis
 import asyncio
+from app.core.dependencies import get_redis
 
 router = APIRouter()
-r = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
 
 @router.get("/{job_id}")  # Changed from "/stream/{job_id}" to "/{job_id}"
-async def stream_job(job_id: str):
+async def stream_job(job_id: str, r: redis.Redis = Depends(get_redis)):
     async def event_generator():
         last_id = "$"  # 從最新的訊息開始
         while True:
@@ -29,4 +29,12 @@ async def stream_job(job_id: str):
                 yield f"data: Error: {str(e)}\n\n"
                 return
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(
+        event_generator(), 
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"  # Disable nginx buffering
+        }
+    )

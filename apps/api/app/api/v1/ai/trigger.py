@@ -13,9 +13,9 @@ from app.db.database import get_db
 from app.models.chat import Conversation, Message
 from app.utils.token_counter import validate_input_size, estimate_tokens
 from app.infra.middleware.rate_limit import RATE_LIMIT_CONFIG
+from app.core.dependencies import get_redis
 
 router = APIRouter()
-r = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
 
 class AITriggerRequest(BaseModel):
     model: str
@@ -27,7 +27,8 @@ async def trigger_ai(
     req: AITriggerRequest,
     request: Request,
     background_tasks: BackgroundTasks,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    r: redis.Redis = Depends(get_redis)
 ):
     job_id = str(uuid4())
     
@@ -92,7 +93,7 @@ async def trigger_ai(
     await r.xadd("ai_jobs", fields=cast(Any, job_data))
 
     # 啟動背景 worker
-    background_tasks.add_task(process_job, job_id, req.model, req.contents, conversation.id)
+    background_tasks.add_task(process_job, job_id, req.model, req.contents, conversation.id, r)
 
     return {
         "job_id": job_id,
@@ -100,7 +101,7 @@ async def trigger_ai(
     }
 
 
-async def process_job(job_id: str, model: str, contents: list, conversation_id: str):
+async def process_job(job_id: str, model: str, contents: list, conversation_id: str, r: redis.Redis):
     """
     背景 worker，將 LLM 生成的內容逐 chunk 寫入 Redis Stream
     並在完成後將完整回應存入資料庫

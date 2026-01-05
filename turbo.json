@@ -16,8 +16,10 @@
       ],
       "env": [
         "GEMINI_API_KEY",
+        "OPENAI_API_KEY",
         "DATABASE_URL",
         "REDIS_URL",
+        "FRONTEND_URL",
         "ADMIN_IPS",
         "VITE_API_URL"
       ]

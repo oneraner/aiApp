@@ -3,8 +3,6 @@
 Shared dependencies for FastAPI routes
 """
 import redis.asyncio as redis
-import os
-from typing import AsyncGenerator
 
 # Global Redis client (initialized in main.py)
 _redis_client: redis.Redis | None = None

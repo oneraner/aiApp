@@ -1,5 +1,4 @@
 # app/services/streaming/worker.py
-import asyncio
 import redis.asyncio as redis
 from app.services.llm.factory import get_llm_provider
 import json

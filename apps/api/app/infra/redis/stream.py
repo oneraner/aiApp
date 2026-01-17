@@ -1,4 +1,4 @@
-from typing import Iterator, Optional
+from typing import Iterator
 from .client import get_redis_client
 
 redis = get_redis_client()

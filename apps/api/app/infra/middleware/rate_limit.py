@@ -1,7 +1,6 @@
 # app/infra/middleware/rate_limit.py
 from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
-from datetime import datetime, timezone
 import redis.asyncio as redis
 import os
 
@@ -72,7 +71,7 @@ class GlobalRateLimitMiddleware(BaseHTTPMiddleware):
         if input_tokens_used >= RATE_LIMIT_CONFIG["max_input_tokens_per_day"]:
             raise HTTPException(
                 status_code=429,
-                detail=f"每日輸入用量已達上限，請明日再試"
+                detail="每日輸入用量已達上限，請明日再試"
             )
         
         # Increment request counter

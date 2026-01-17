@@ -119,7 +119,7 @@ async def process_job(job_id: str, model: str, contents: list, conversation_id: 
         print(f"[Background Task] Starting job {job_id} with model {model}")
         
         provider = GeminiProvider()
-        print(f"[Background Task] GeminiProvider initialized")
+        print("[Background Task] GeminiProvider initialized")
 
         # 將多段內容組合成 prompt
         prompt = "\n".join([c.get("content", "") for c in contents])
@@ -139,7 +139,7 @@ async def process_job(job_id: str, model: str, contents: list, conversation_id: 
                     if chunk_count % 10 == 0:
                         print(f"[Background Task] Received {chunk_count} chunks")
         except asyncio.TimeoutError:
-            print(f"[Background Task] Request timeout after 30 seconds")
+            print("[Background Task] Request timeout after 30 seconds")
             error_msg = "請求超時（30秒），請重試或使用更短的提示"
             await r.xadd(f"ai_results:{job_id}", fields={"error": error_msg})
             # Still save what we got
@@ -150,7 +150,7 @@ async def process_job(job_id: str, model: str, contents: list, conversation_id: 
 
         # 最後標記完成
         await r.xadd(f"ai_results:{job_id}", fields={"chunk": "[DONE]"})
-        print(f"[Background Task] Sent [DONE] signal")
+        print("[Background Task] Sent [DONE] signal")
         
         # Save assistant message to database
         from app.db.database import AsyncSessionLocal
@@ -178,7 +178,7 @@ async def process_job(job_id: str, model: str, contents: list, conversation_id: 
         user_message = "處理請求時發生錯誤"
         
         if "RESOURCE_EXHAUSTED" in error_msg or "429" in error_msg:
-            user_message = f"API 配額已用完，請稍後再試"
+            user_message = "API 配額已用完，請稍後再試"
             if "gemini-2.0-flash-exp" in error_msg:
                 user_message += " (建議切換到 gemini-1.5-flash 模型)"
         elif "PERMISSION_DENIED" in error_msg or "403" in error_msg:

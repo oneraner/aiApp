@@ -20,11 +20,11 @@ export function ModelSelector({ value, onChange, models, disabled }: ModelSelect
                 Model:
             </label>
             <Select value={value} onValueChange={onChange} disabled={disabled}>
-                <SelectTrigger className="w-[200px] sm:w-[280px]" id="model-select">
-                    <SelectValue placeholder="Select a model" />
+                <SelectTrigger className="w-[180px] sm:w-[240px]" id="model-select">
+                    <SelectValue placeholder="選擇模型" />
                 </SelectTrigger>
                 <SelectContent
-                    className="bg-white w-[200px] sm:w-[280px] max-h-[300px] overflow-y-auto"
+                    className="w-[180px] sm:w-[240px] max-h-[300px]"
                     position="popper"
                     sideOffset={4}
                 >
@@ -32,16 +32,10 @@ export function ModelSelector({ value, onChange, models, disabled }: ModelSelect
                         <SelectItem
                             key={model.name}
                             value={model.name}
-                            className="cursor-pointer px-2 py-1.5"
                         >
-                            <div className="w-full overflow-hidden line-clamp-1">
-                                <span
-                                    className="font-mono text-sm text-gray-900 block"
-                                    title={model.name}
-                                >
-                                    {model.name}
-                                </span>
-                            </div>
+                            <span className="font-mono text-sm truncate" title={model.name}>
+                                {model.name}
+                            </span>
                         </SelectItem>
                     ))}
                 </SelectContent>

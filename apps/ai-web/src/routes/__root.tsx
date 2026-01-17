@@ -1,6 +1,7 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
+import { ThemeProvider } from '@/lib/theme'
 
 import appCss from '../styles.css?url'
 
@@ -15,6 +16,10 @@ export const Route = createRootRoute({
       {
         title: 'AI Chat',
       },
+      {
+        name: 'description',
+        content: 'AI-powered chat application with streaming responses',
+      },
     ],
     links: [
       {
@@ -27,10 +32,10 @@ export const Route = createRootRoute({
   shellComponent: RootDocument,
 
   notFoundComponent: () => (
-    <div className="flex h-screen w-screen items-center justify-center text-muted-foreground">
+    <div className="flex h-screen w-screen items-center justify-center text-muted-foreground bg-background">
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-semibold">404</h1>
-        <p>This page does not exist.</p>
+        <p>找不到此頁面</p>
       </div>
     </div>
   ),
@@ -38,12 +43,26 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="zh-TW" suppressHydrationWarning>
       <head>
         <HeadContent />
+        {/* Prevent flash of wrong theme */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                const theme = localStorage.getItem('theme') || 'system';
+                const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (isDark) document.documentElement.classList.add('dark');
+              })();
+            `,
+          }}
+        />
       </head>
-      <body className="w-screen h-screen">
-        {children}
+      <body className="w-screen h-screen bg-background text-foreground">
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
 
         <TanStackDevtools
           config={{ position: 'bottom-right' }}

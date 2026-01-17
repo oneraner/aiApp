@@ -1,135 +1,366 @@
-# Turborepo starter
+# 🤖 AI ChatBot Platform
 
-This Turborepo starter is maintained by the Turborepo core team.
+<div align="center">
 
-## Using this example
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?style=for-the-badge&logo=typescript)
+![React](https://img.shields.io/badge/React-19-61dafb?style=for-the-badge&logo=react)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=for-the-badge&logo=postgresql)
+![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=for-the-badge&logo=redis)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.0-38B2AC?style=for-the-badge&logo=tailwind-css)
 
-Run the following command:
+**一個全端 AI 對話平台，整合 OpenAI 與 Google Gemini API，支援即時串流回應、對話歷史管理與 Rate Limiting 機制**
 
-```sh
-npx create-turbo@latest
+[🌐 Live Demo (Frontend)](https://ai-app-ai-web.vercel.app/) | [📡 API Endpoint](https://aiapp-wz6i.onrender.com)
+
+</div>
+
+---
+
+## 📑 目錄
+
+- [✨ 專案特點](#-專案特點)
+- [🏗️ 系統架構](#️-系統架構)
+- [🛠️ 技術棧](#️-技術棧)
+- [🚀 快速開始](#-快速開始)
+- [☁️ 部署指南](#️-部署指南)
+- [🔧 環境變數設定](#-環境變數設定)
+- [📁 專案結構](#-專案結構)
+- [🧑‍💻 開發者亮點](#-開發者亮點)
+
+---
+
+## ✨ 專案特點
+
+### 🎯 核心功能
+- **多模型 AI 對話** - 同時支援 OpenAI GPT 與 Google Gemini，可動態切換模型，因為沒買 OpenAI，所以只能用 Gemini
+- **即時串流回應 (SSE)** - Server-Sent Events 實現流暢的打字機效果
+- **對話歷史管理** - PostgreSQL 持久化儲存，支援多輪對話上下文
+- **全域 Rate Limiting** - Redis 實現 API 請求限制，防止濫用
+
+### 🎨 前端亮點
+- **React 19** 就是 React
+- **TanStack Router** 類型安全路由，支援 SSR，嘗試 Next.js、React Router 之外的選擇
+- **Tailwind CSS 4** 經歷過 300KB~500KB 的 CSS 檔案之後，唯一支持 Tailwind CSS
+- **響應式設計 （ＲＷＤ）** 有稍微喬一下但沒有很仔細，畢竟也沒有設計稿
+- **深淺主題切換** Gemini 風格藍色配色，支援系統主題偵測
+- **UI 優化** 透過 ui-ux-pro-max skill 進行設計系統優化
+
+### ⚡ 後端亮點
+- **非同步架構** - 全面採用 async/await，高併發處理能力
+- **自動資料庫遷移** - Alembic 整合，啟動時自動執行 migrations
+- **依賴注入設計** - 清晰的模組化架構，易於測試與維護
+- **完整 CORS 配置** - 支援本地開發與生產環境
+- **全域錯誤處理** - API 回傳詳細錯誤訊息 + 修復提示
+
+---
+
+## 🏗️ 系統架構
+
+```mermaid
+graph TB
+    subgraph "Frontend (Vercel)"
+        A[React 19 + Vite] --> B[TanStack Router]
+        B --> C[Radix UI Components]
+    end
+    
+    subgraph "Backend (Render)"
+        D[FastAPI] --> E[AI Services]
+        E --> F[OpenAI API]
+        E --> G[Gemini API]
+        D --> H[Rate Limiter]
+    end
+    
+    subgraph "Database (Render)"
+        I[(PostgreSQL)]
+    end
+    
+    subgraph "Cache (Upstash)"
+        J[(Redis)]
+    end
+    
+    A -.->|HTTPS + SSE| D
+    D --> I
+    D --> J
+    H --> J
 ```
 
-## What's inside?
+### 部署架構概覽
 
-This Turborepo includes the following packages/apps:
+| 服務 | 平台 | 說明 |
+|------|------|------|
+| **Frontend** | Vercel | React SPA，全球 CDN 分發 |
+| **Backend** | Render | FastAPI 服務，Web Service |
+| **PostgreSQL** | Render | 託管資料庫服務 |
+| **Redis** | Upstash | Serverless Redis，支援全球節點 |
 
-### Apps and Packages
+---
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+## 🛠️ 技術棧
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+### Frontend (`apps/ai-web`)
+| 技術 | 版本 | 用途 |
+|------|------|------|
+| React | 19.2 | UI 框架 (最新版本) |
+| TypeScript | 5.7 | 類型安全 |
+| Vite | 7.1 | 建構工具 |
+| TanStack Router | 1.132 | 類型安全路由 |
+| Tailwind CSS | 4.0 | 樣式系統 |
+| Radix UI | Latest | 無障礙元件庫 |
+| Biome | 2.2 | Linter & Formatter |
 
-### Utilities
+### Backend (`apps/api`)
+| 技術 | 版本 | 用途 |
+|------|------|------|
+| Python | 3.11+ | 主要語言 |
+| FastAPI | 0.115 | Web 框架 |
+| SQLAlchemy | 2.0 | ORM (async) |
+| Alembic | 1.14 | 資料庫遷移 |
+| asyncpg | 0.30 | PostgreSQL 驅動 |
+| Redis | 7.0 | 快取與 Rate Limiting |
+| openai-agents | 0.6 | OpenAI SDK |
+| google-genai | Latest | Gemini SDK |
 
-This Turborepo has some additional tools already setup for you:
+### DevOps & Tooling
+| 技術 | 用途 |
+|------|------|
+| Turborepo | Monorepo 管理 |
+| pnpm | 套件管理 |
+| Docker Compose | 本地開發環境 |
+| GitHub Actions | CI/CD (可選) |
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+---
 
-### Build
+## 🚀 快速開始
 
-To build all apps and packages, run the following command:
+### 前置需求
 
-```
-cd my-turborepo
+- **Node.js** >= 18
+- **pnpm** >= 9.0
+- **Python** >= 3.11
+- **Docker** (用於本地資料庫)
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
+### 1️⃣ Clone 專案
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
-
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+```bash
+git clone https://github.com/your-username/aiApp.git
+cd aiApp
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+### 2️⃣ 安裝依賴
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+```bash
+# 安裝前端依賴
+pnpm install
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+# 安裝後端依賴
+cd apps/api
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+### 3️⃣ 設定環境變數
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+```bash
+# 前端環境變數
+cp apps/ai-web/.env.example apps/ai-web/.env
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
+# 後端環境變數
+cp apps/api/.env.example apps/api/.env
+# 編輯 .env 填入你的 API Keys
 ```
 
-## Useful Links
+### 4️⃣ 啟動本地服務
 
-Learn more about the power of Turborepo:
+```bash
+# 終端機 1: 啟動 PostgreSQL 與 Redis (Docker)
+pnpm dev:services
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+# 終端機 2: 啟動所有開發伺服器
+pnpm dev
+```
+
+或者分開啟動：
+
+```bash
+# 只啟動前端 (http://localhost:3000)
+pnpm --filter ai-web dev
+
+# 只啟動後端 (http://localhost:8000)
+cd apps/api && pnpm dev
+```
+
+### 5️⃣ 驗證服務
+
+- **前端**: http://localhost:3000
+- **後端 API**: http://localhost:8000
+- **API 文件**: http://localhost:8000/docs
+
+---
+
+## ☁️ 部署指南
+
+### 🔵 Frontend - Vercel
+
+1. **連接 GitHub Repository**
+   - 登入 [Vercel](https://vercel.com)
+   - Import 你的 GitHub repository
+
+2. **設定 Build Configuration**
+   ```
+   Framework Preset: Vite
+   Root Directory: apps/ai-web
+   Build Command: pnpm build
+   Output Directory: dist
+   ```
+
+3. **設定環境變數**
+   ```
+   VITE_API_URL=https://your-backend.onrender.com
+   ```
+
+4. **部署**
+   - 點擊 Deploy，Vercel 會自動建構與部署
+
+---
+
+### 🟣 Backend + PostgreSQL - Render
+
+#### 建立 PostgreSQL 資料庫
+
+1. 登入 [Render](https://render.com)
+2. 點擊 **New** → **PostgreSQL**
+3. 設定資料庫：
+   - Name: `aiapp-db`
+   - Region: Singapore (選擇最近的區域)
+4. 複製 **Internal Database URL** 備用
+
+#### 部署 Backend Web Service
+
+1. 點擊 **New** → **Web Service**
+2. 連接 GitHub Repository
+3. 設定服務：
+   ```
+   Name: aiapp-api
+   Root Directory: apps/api
+   Runtime: Python 3
+   Build Command: pip install -r requirements.txt
+   Start Command: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+   ```
+
+4. 設定環境變數：
+   | Key | Value |
+   |-----|-------|
+   | `DATABASE_URL` | `postgresql+asyncpg://...` (從 PostgreSQL 複製並修改 driver) |
+   | `REDIS_URL` | (從 Upstash 取得) |
+   | `OPENAI_API_KEY` | 你的 OpenAI API Key |
+   | `GEMINI_API_KEY` | 你的 Gemini API Key |
+   | `FRONTEND_URL` | `https://your-app.vercel.app` |
+   | `ENVIRONMENT` | `production` |
+
+5. 點擊 **Create Web Service**
+
+> ⚠️ **注意**: Render 的 PostgreSQL URL 格式為 `postgresql://...`，需要改為 `postgresql+asyncpg://...` 以支援 asyncpg 驅動
+
+---
+
+### 🔴 Redis - Upstash
+
+1. 登入 [Upstash](https://upstash.com)
+2. 建立新的 Redis Database
+3. 選擇區域 (建議與 Backend 相同區域)
+4. 複製 **UPSTASH_REDIS_REST_URL** 或 **Redis URL**
+5. 在 Render 設定 `REDIS_URL` 環境變數
+
+---
+
+## 🔧 環境變數設定
+
+### Frontend (`apps/ai-web/.env`)
+
+```env
+# Backend API URL
+VITE_API_URL=http://localhost:8000          # 本地開發
+# VITE_API_URL=https://your-api.onrender.com # 生產環境
+```
+
+### Backend (`apps/api/.env`)
+
+```env
+# AI API Keys
+GEMINI_API_KEY=your_gemini_api_key
+OPENAI_API_KEY=your_openai_api_key
+
+# Database
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/aiapp
+
+# Redis
+REDIS_URL=redis://localhost:6379/0
+
+# Rate Limiting Admin (bypass rate limit)
+ADMIN_IPS=127.0.0.1,::1
+
+# CORS
+FRONTEND_URL=http://localhost:3000
+
+# Environment
+ENVIRONMENT=development
+```
+
+---
+
+## 📁 專案結構
+
+```
+aiApp/
+├── apps/
+│   ├── ai-web/                 # 🎨 前端應用
+│   │   ├── src/
+│   │   │   ├── components/     # 共用元件
+│   │   │   ├── features/       # 功能模組 (chat, etc.)
+│   │   │   ├── routes/         # 頁面路由
+│   │   │   ├── ui/             # UI 元件 (Radix + shadcn)
+│   │   │   └── lib/            # 工具函數
+│   │   └── package.json
+│   │
+│   └── api/                    # ⚡ 後端 API
+│       ├── app/
+│       │   ├── api/v1/         # API 路由
+│       │   │   ├── ai/         # AI 對話 endpoints
+│       │   │   ├── conversations/
+│       │   │   └── admin/
+│       │   ├── services/       # 業務邏輯
+│       │   │   ├── llm/        # LLM 服務封裝
+│       │   │   └── stream/     # SSE 串流處理
+│       │   ├── models/         # SQLAlchemy Models
+│       │   ├── db/             # 資料庫連線 & 遷移
+│       │   └── infra/          # 中介層 (Rate Limit)
+│       ├── alembic/            # 資料庫遷移腳本
+│       └── requirements.txt
+│
+├── packages/                   # 共享套件
+│   ├── ui/                     # 共用 UI 元件庫
+│   ├── eslint-config/          # ESLint 配置
+│   └── typescript-config/      # TypeScript 配置
+│
+├── docker-compose.yml          # 本地開發環境
+├── turbo.json                  # Turborepo 配置
+└── pnpm-workspace.yaml         # pnpm 工作區配置
+```
+
+---
+
+## 📜 License
+
+This project is licensed under the MIT License.
+
+---
+
+<div align="center">
+
+**Built with ❤️ by Jeff**
+
+[GitHub](https://github.com/your-username) • [LinkedIn](https://linkedin.com/in/your-profile)
+
+</div>

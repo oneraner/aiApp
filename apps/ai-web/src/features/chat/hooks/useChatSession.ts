@@ -5,6 +5,7 @@ import { apiClient } from '@/lib/api-client'
 export function useChatSession(selectedModel: string = 'gemini-flash-latest') {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const conversationIdRef = useRef<string | null>(null)
 
@@ -106,6 +107,8 @@ export function useChatSession(selectedModel: string = 'gemini-flash-latest') {
   }
 
   const loadConversation = async (conversationId: string) => {
+    setIsLoadingMessages(true)
+    setError(null)
     try {
       const conversation = await apiClient.getConversation(conversationId)
       conversationIdRef.current = conversation.id
@@ -119,6 +122,8 @@ export function useChatSession(selectedModel: string = 'gemini-flash-latest') {
       )
     } catch (err) {
       setError(err instanceof Error ? err.message : '載入對話失敗')
+    } finally {
+      setIsLoadingMessages(false)
     }
   }
 
@@ -136,6 +141,7 @@ export function useChatSession(selectedModel: string = 'gemini-flash-latest') {
     messages,
     sendMessage,
     isStreaming,
+    isLoadingMessages,
     error,
     loadConversation,
     clearConversation,

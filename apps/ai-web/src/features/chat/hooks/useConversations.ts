@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { apiClient } from '@/lib/api-client'
 
 interface Conversation {
@@ -13,7 +13,7 @@ export function useConversations() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
-    const fetchConversations = async () => {
+    const fetchConversations = useCallback(async () => {
         setLoading(true)
         setError(null)
         try {
@@ -24,9 +24,9 @@ export function useConversations() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [])
 
-    const deleteConversation = async (id: string) => {
+    const deleteConversation = useCallback(async (id: string) => {
         try {
             await apiClient.deleteConversation(id)
             // Remove from local state
@@ -35,12 +35,12 @@ export function useConversations() {
             setError(err instanceof Error ? err.message : 'Failed to delete conversation')
             throw err
         }
-    }
+    }, [])
 
     // Auto-fetch on mount
     useEffect(() => {
         fetchConversations()
-    }, [])
+    }, [fetchConversations])
 
     return {
         conversations,

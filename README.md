@@ -52,6 +52,8 @@
 - **依賴注入設計** - 清晰的模組化架構，易於測試與維護
 - **完整 CORS 配置** - 支援本地開發與生產環境
 - **全域錯誤處理** - API 回傳詳細錯誤訊息 + 修復提示
+- **Sentry 整合** - 生產環境即時錯誤監控與追蹤
+- **完整測試覆蓋** - 包含單元測試與整合測試，確保系統穩定性
 
 ---
 
@@ -197,6 +199,14 @@ cd apps/api && pnpm dev
 - **後端 API**: http://localhost:8000
 - **API 文件**: http://localhost:8000/docs
 
+### 6️⃣ 執行測試
+
+```bash
+cd apps/api
+source .venv/bin/activate
+pytest app/tests/ -v
+```
+
 ---
 
 ## ☁️ 部署指南
@@ -264,6 +274,51 @@ cd apps/api && pnpm dev
 > ⚠️ **注意**: Render 的 PostgreSQL URL 格式為 `postgresql://...`，需要改為 `postgresql+asyncpg://...` 以支援 asyncpg 驅動
 
 ---
+
+## 🧪 測試策略與品質保證
+
+嚴格的測試流程確保系統穩定性，目前的測試覆蓋率涵蓋核心業務邏輯與邊界情況：
+
+### 1. 自動化測試範疇 (`apps/api/app/tests/`)
+我們使用 **Pytest** 搭配 **Asyncio** 進行完整的非同步測試：
+
+| 測試模組 | 測試內容與目的 | 關鍵測試案例 |
+|---------|---------------|-------------|
+| **AI Trigger** | 驗證 LLM 觸發邏輯 | • Mock LLM Provider 避免消耗額度<br>• 輸入字元數驗證 (Max 300 chars)<br>• 自動建立/綁定 Conversation 機制 |
+| **Conversations** | 對話管理 CRUD | • 建立、讀取、刪除對話<br>• 404 錯誤處理邏輯<br>• 分頁 (Pagination) 功能驗證 |
+| **Rate Limiter** | API 流量限制機制 | • 每日請求次數限制 (3次/IP)<br>• Token 用量限制<br>• Admin IP 白名單繞過測試<br>• Health Check 不受限驗證 |
+| **Health Check** | 服務存活監控 | • 驗證服務啟動狀態<br>• 確認無額外依賴阻擋 |
+
+### 2. 測試執行
+```bash
+cd apps/api
+# 執行所有測試並顯示詳細資訊
+pytest app/tests/ -v
+
+# 產生覆蓋率報告
+pytest --cov=app app/tests/
+```
+
+---
+
+## 🛡️ Sentry 系統監控
+
+生產環境整合 **Sentry** 進行錯誤追蹤。
+
+### 監控範圍
+- **全域異常捕獲**: 自動攔截未被捕獲的 `500 Internal Server Error` (Level: **Error**)。
+- **Sentry Logging 整合**: 
+    - `logger.error()` -> **Error** 事件 (系統崩潰、資料庫連線失敗)
+    - `logger.warning()` -> **Warning** 事件 (API Rate Limit 接近上限、非預期操作)
+    - `logger.info()` -> **Breadcrumbs** (操作歷程記錄)
+- **FastAPI 整合**: 紀錄完整的 Request Context (URL, Headers, Method, Body)。
+- **SQLAlchemy 整合**: 追蹤資料庫查詢效能與連線錯誤。
+
+### 錯誤處理流程
+1. **攔截**: Global Exception Handler 捕獲異常。
+2. **紀錄**: 將 Stack Trace 與 Context 上傳至 Sentry。
+3. **回饋**: API 回傳標準化的 JSON 錯誤訊息給前端，避免洩漏敏感堆疊資訊。
+
 
 ### 🔴 Redis - Upstash
 

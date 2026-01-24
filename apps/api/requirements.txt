@@ -31,3 +31,14 @@ asyncpg==0.30.0
 alembic==1.14.0
 python-dotenv==1.0.1
 google-genai
+
+# Testing
+pytest==8.3.5
+pytest-asyncio==0.24.0
+pytest-cov==4.1.0
+coverage==7.6.0
+fakeredis==2.25.0
+aiosqlite==0.20.0
+
+# Monitoring
+sentry-sdk[fastapi]==2.19.2

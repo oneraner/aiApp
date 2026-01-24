@@ -9,6 +9,10 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import redis.asyncio as redis
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+from sentry_sdk.integrations.logging import LoggingIntegration
 
 # App routers
 from app.api.v1.health import router as health_router
@@ -31,6 +35,24 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 setup_logging()
+
+# Initialize Sentry (only if DSN provided)
+SENTRY_DSN = os.getenv("SENTRY_DSN")
+if SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[
+            FastApiIntegration(),
+            SqlalchemyIntegration(),
+            LoggingIntegration(
+                level=logging.INFO,        # Capture info and above as breadcrumbs
+                event_level=logging.WARNING  # Capture warning and above as events
+            ),
+        ],
+        traces_sample_rate=0.1,  # 10% of transactions
+        profiles_sample_rate=0.1,
+        environment=os.getenv("ENVIRONMENT", "development"),
+    )
 
 # Create FastAPI app
 app = FastAPI(title="AI Platform API")
@@ -67,6 +89,8 @@ set_redis_client(redis_client)
 set_admin_redis(redis_client)
 
 
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
 # Global exception handler for better error responses
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
@@ -74,6 +98,10 @@ async def global_exception_handler(request: Request, exc: Exception):
     Global exception handler that returns detailed error information.
     In production, you may want to hide internal details.
     """
+    # Let FastAPI/Starlette handle HTTPExceptions (like 429, 404, etc.)
+    if isinstance(exc, StarletteHTTPException):
+        raise exc
+
     error_id = os.urandom(4).hex()
     
     # Log the full error with traceback

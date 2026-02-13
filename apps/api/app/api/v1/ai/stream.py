@@ -7,12 +7,16 @@ from app.core.dependencies import get_redis
 
 router = APIRouter()
 
+import json
+
+# ... (imports)
+
 @router.get("/{job_id}")
 async def stream_job(job_id: str, r: redis.Redis = Depends(get_redis)):
     async def event_generator():
-        last_id = "0-0"  # Start from the beginning to catch all messages
+        last_id = "0-0"
         timeout_count = 0
-        max_timeouts = 30  # Max 30 seconds of waiting
+        max_timeouts = 30
         
         while timeout_count < max_timeouts:
             try:
@@ -22,16 +26,24 @@ async def stream_job(job_id: str, r: redis.Redis = Depends(get_redis)):
                     for msg_id, msg in messages:
                         last_id = msg_id
                         chunk = msg.get("chunk", "")
-                        yield f"data: {chunk}\n\n"
-
+                        
                         if chunk == "[DONE]":
+                            yield f"data: {chunk}\n\n"
                             return
-                    timeout_count = 0  # Reset timeout on successful read
+                        
+                        # JSON encode to handle newlines safely
+                        # Browser will receive: data: "Hello\nWorld"
+                        safe_chunk = json.dumps(chunk)
+                        yield f"data: {safe_chunk}\n\n"
+
+                    timeout_count = 0
                 else:
                     timeout_count += 1
                     await asyncio.sleep(0.1)
             except Exception as e:
-                yield f"data: Error: {str(e)}\n\n"
+                # JSON encode error message too
+                error_msg = json.dumps(f"Error: {str(e)}")
+                yield f"data: {error_msg}\n\n"
                 return
         
         # Timeout reached

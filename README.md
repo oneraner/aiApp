@@ -11,7 +11,7 @@
 
 **一個全端 AI 對話平台，整合 OpenAI 與 Google Gemini API，支援即時串流回應、對話歷史管理與 Rate Limiting 機制**
 
-[🌐 Live Demo (Frontend)](https://ai-app-ai-web.vercel.app/) | [📡 API Endpoint](https://aiapp-wz6i.onrender.com)
+[🌐 Live Demo (Frontend)](https://ai-app-ai-web.vercel.app/) | [📡 API Endpoint](https://aiapp-api-xxxxx.a.run.app)
 
 </div>
 
@@ -66,14 +66,14 @@ graph TB
         B --> C[Radix UI Components]
     end
     
-    subgraph "Backend (Render)"
+    subgraph "Backend (GCP Cloud Run)"
         D[FastAPI] --> E[AI Services]
         E --> F[OpenAI API]
         E --> G[Gemini API]
         D --> H[Rate Limiter]
     end
     
-    subgraph "Database (Render)"
+    subgraph "Database (Supabase)"
         I[(PostgreSQL)]
     end
     
@@ -92,8 +92,8 @@ graph TB
 | 服務 | 平台 | 說明 |
 |------|------|------|
 | **Frontend** | Vercel | React SPA，全球 CDN 分發 |
-| **Backend** | Render | FastAPI 服務，Web Service |
-| **PostgreSQL** | Render | 託管資料庫服務 |
+| **Backend** | GCP Cloud Run | FastAPI 服務，按請求計費，自動擴縮 |
+| **PostgreSQL** | Supabase | 免費託管 PostgreSQL (500MB) |
 | **Redis** | Upstash | Serverless Redis，支援全球節點 |
 
 ---
@@ -227,7 +227,7 @@ pytest app/tests/ -v
 
 3. **設定環境變數**
    ```
-   VITE_API_URL=https://your-backend.onrender.com
+   VITE_API_URL=https://aiapp-api-xxxxx-de.a.run.app
    ```
 
 4. **部署**
@@ -235,43 +235,51 @@ pytest app/tests/ -v
 
 ---
 
-### 🟣 Backend + PostgreSQL - Render
+### 🟢 Backend - GCP Cloud Run
 
-#### 建立 PostgreSQL 資料庫
+#### 前置準備
 
-1. 登入 [Render](https://render.com)
-2. 點擊 **New** → **PostgreSQL**
-3. 設定資料庫：
-   - Name: `aiapp-db`
-   - Region: Singapore (選擇最近的區域)
-4. 複製 **Internal Database URL** 備用
-
-#### 部署 Backend Web Service
-
-1. 點擊 **New** → **Web Service**
-2. 連接 GitHub Repository
-3. 設定服務：
-   ```
-   Name: aiapp-api
-   Root Directory: apps/api
-   Runtime: Python 3
-   Build Command: pip install -r requirements.txt
-   Start Command: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+1. 安裝 [Google Cloud CLI](https://cloud.google.com/sdk/docs/install)
+2. 登入並設定專案：
+   ```bash
+   gcloud auth login
+   gcloud config set project YOUR_PROJECT_ID
    ```
 
-4. 設定環境變數：
-   | Key | Value |
-   |-----|-------|
-   | `DATABASE_URL` | `postgresql+asyncpg://...` (從 PostgreSQL 複製並修改 driver) |
-   | `REDIS_URL` | (從 Upstash 取得) |
-   | `OPENAI_API_KEY` | 你的 OpenAI API Key |
-   | `GEMINI_API_KEY` | 你的 Gemini API Key |
-   | `FRONTEND_URL` | `https://your-app.vercel.app` |
-   | `ENVIRONMENT` | `production` |
+#### 一鍵部署
 
-5. 點擊 **Create Web Service**
+```bash
+cd apps/api
+./deploy-gcp.sh
+```
 
-> ⚠️ **注意**: Render 的 PostgreSQL URL 格式為 `postgresql://...`，需要改為 `postgresql+asyncpg://...` 以支援 asyncpg 驅動
+#### 設定環境變數
+
+```bash
+gcloud run services update aiapp-api --region asia-east1 \
+  --set-env-vars "DATABASE_URL=postgresql+asyncpg://...,REDIS_URL=redis://...,GEMINI_API_KEY=...,OPENAI_API_KEY=...,FRONTEND_URL=https://your-app.vercel.app,ENVIRONMENT=production"
+```
+
+| Key | Value |
+|-----|-------|
+| `DATABASE_URL` | `postgresql+asyncpg://...` (從 Supabase 取得並修改 driver) |
+| `REDIS_URL` | (從 Upstash 取得) |
+| `OPENAI_API_KEY` | 你的 OpenAI API Key |
+| `GEMINI_API_KEY` | 你的 Gemini API Key |
+| `FRONTEND_URL` | `https://your-app.vercel.app` |
+| `ENVIRONMENT` | `production` |
+
+> ⚠️ **注意**: Supabase 的 PostgreSQL URL 格式為 `postgresql://...`，需要改為 `postgresql+asyncpg://...` 以支援 asyncpg 驅動
+
+---
+
+### 🟡 Database - Supabase (Free PostgreSQL)
+
+1. 登入 [Supabase](https://supabase.com)
+2. 建立新專案，選擇區域 (建議: Singapore 或 Tokyo)
+3. 到 **Settings** → **Database** → 複製 **Connection string (URI)**
+4. 將 `postgresql://` 改為 `postgresql+asyncpg://`
+5. 在 Cloud Run 設定 `DATABASE_URL` 環境變數
 
 ---
 

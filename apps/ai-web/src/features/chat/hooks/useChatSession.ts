@@ -73,11 +73,21 @@ export function useChatSession(selectedModel: string = 'gemini-flash-latest') {
           return
         }
 
+        // Try to parse JSON chunk (backend sends JSON encoded string to handle newlines)
+        let content = chunk
+        try {
+          if (chunk.startsWith('"')) {
+            content = JSON.parse(chunk)
+          }
+        } catch (e) {
+          // ignore, use raw chunk
+        }
+
         // Append chunk to assistant message
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === assistantMessageId
-              ? { ...msg, content: msg.content + chunk }
+              ? { ...msg, content: msg.content + content }
               : msg
           )
         )

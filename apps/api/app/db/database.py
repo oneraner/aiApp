@@ -10,8 +10,12 @@ load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/aiapp")
 
-# Check if using external database (Render, etc.) that requires SSL
-is_external_db = "render.com" in DATABASE_URL or "neon.tech" in DATABASE_URL or "supabase" in DATABASE_URL
+# Check if using external database that requires SSL
+# Covers: Render, Supabase, Neon, GCP Cloud SQL, or explicit production environment
+is_external_db = (
+    any(host in DATABASE_URL for host in ["render.com", "neon.tech", "supabase", "cloudsql", "pooler.supabase.com"])
+    or os.getenv("ENVIRONMENT") == "production"
+)
 
 # SSL configuration for external databases
 connect_args = {}
@@ -19,8 +23,15 @@ if is_external_db:
     # Create SSL context for secure connection
     ssl_context = ssl.create_default_context()
     ssl_context.check_hostname = False
-    ssl_context.verify_mode = ssl.CERT_NONE  # Render doesn't require cert verification
+    ssl_context.verify_mode = ssl.CERT_NONE
     connect_args["ssl"] = ssl_context
+
+# Supabase connection pooler (Supavisor) doesn't support prepared statements
+# asyncpg uses prepared statements by default, which causes errors through poolers
+is_pooler = "pooler.supabase.com" in DATABASE_URL
+if is_pooler:
+    connect_args["prepared_statement_cache_size"] = 0
+    connect_args["statement_cache_size"] = 0
 
 # Create async engine
 engine = create_async_engine(

@@ -9,10 +9,10 @@ import os
 # Rate limit configuration
 RATE_LIMIT_CONFIG = {
     "max_requests_per_day": 3,
-    "max_input_tokens_per_day": 100,  # ~300 chars / 3
-    "max_output_tokens_per_day": 500,
-    "max_input_chars": 300,
-    "max_output_tokens": 500,
+    "max_input_tokens_per_day": 2000,
+    "max_output_tokens_per_day": 5000,
+    "max_input_chars": 1000,
+    "max_output_tokens": 1000,
 }
 
 

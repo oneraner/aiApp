@@ -56,35 +56,40 @@ async def list_conversations(
     
     Returns conversations ordered by most recently updated first.
     """
-    # Optimized query using SQL count instead of loading all messages
-    query = (
-        select(
-            Conversation.id,
-            Conversation.created_at,
-            Conversation.updated_at,
-            func.count(Message.id).label('message_count')
+    try:
+        # Optimized query using SQL count instead of loading all messages
+        query = (
+            select(
+                Conversation.id,
+                Conversation.created_at,
+                Conversation.updated_at,
+                func.count(Message.id).label('message_count')
+            )
+            .outerjoin(Message, Message.conversation_id == Conversation.id)
+            .group_by(Conversation.id, Conversation.created_at, Conversation.updated_at)
+            .order_by(Conversation.updated_at.desc())
+            .offset(skip)
+            .limit(limit)
         )
-        .outerjoin(Message, Message.conversation_id == Conversation.id)
-        .group_by(Conversation.id, Conversation.created_at, Conversation.updated_at)
-        .order_by(Conversation.updated_at.desc())
-        .offset(skip)
-        .limit(limit)
-    )
-    
-    result = await db.execute(query)
-    rows = result.all()
-    
-    conversation_list = [
-        ConversationListItem(
-            id=row.id,
-            created_at=row.created_at,
-            updated_at=row.updated_at,
-            message_count=row.message_count
-        )
-        for row in rows
-    ]
-    
-    return conversation_list
+        
+        result = await db.execute(query)
+        rows = result.all()
+        
+        conversation_list = [
+            ConversationListItem(
+                id=row.id,
+                created_at=row.created_at,
+                updated_at=row.updated_at,
+                message_count=row.message_count
+            )
+            for row in rows
+        ]
+        
+        return conversation_list
+    except Exception as e:
+        import logging
+        logging.error(f"Error listing conversations: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to fetch conversations: {str(e)}")
 
 
 @router.get("/{conversation_id}", response_model=ConversationResponse)
@@ -94,19 +99,26 @@ async def get_conversation(conversation_id: str, db: AsyncSession = Depends(get_
     
    Returns 404 if conversation not found.
     """
-    from sqlalchemy.orm import selectinload
-    
-    result = await db.execute(
-        select(Conversation)
-        .options(selectinload(Conversation.messages))
-        .where(Conversation.id == conversation_id)
-    )
-    conversation = result.scalar_one_or_none()
-    
-    if not conversation:
-        raise HTTPException(status_code=404, detail="Conversation not found")
-    
-    return conversation
+    try:
+        from sqlalchemy.orm import selectinload
+        
+        result = await db.execute(
+            select(Conversation)
+            .options(selectinload(Conversation.messages))
+            .where(Conversation.id == conversation_id)
+        )
+        conversation = result.scalar_one_or_none()
+        
+        if not conversation:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+        
+        return conversation
+    except HTTPException:
+        raise
+    except Exception as e:
+        import logging
+        logging.error(f"Error getting conversation {conversation_id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to fetch conversation: {str(e)}")
 
 
 @router.delete("/{conversation_id}")
@@ -116,15 +128,22 @@ async def delete_conversation(conversation_id: str, db: AsyncSession = Depends(g
     
     Returns 404 if conversation not found.
     """
-    result = await db.execute(
-        select(Conversation).where(Conversation.id == conversation_id)
-    )
-    conversation = result.scalar_one_or_none()
-    
-    if not conversation:
-        raise HTTPException(status_code=404, detail="Conversation not found")
-    
-    await db.delete(conversation)
-    await db.commit()
-    
-    return {"success": True, "message": "Conversation deleted successfully"}
+    try:
+        result = await db.execute(
+            select(Conversation).where(Conversation.id == conversation_id)
+        )
+        conversation = result.scalar_one_or_none()
+        
+        if not conversation:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+        
+        await db.delete(conversation)
+        await db.commit()
+        
+        return {"success": True, "message": "Conversation deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        import logging
+        logging.error(f"Error deleting conversation {conversation_id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to delete conversation: {str(e)}")
